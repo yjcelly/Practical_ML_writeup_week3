@@ -1,58 +1,15 @@
 ---
-title       : Motivation and pre-requisites
-subtitle    : 
-author      : Jeffrey Leek
-job         : Johns Hopkins Bloomberg School of Public Health
-logo        : bloomberg_shield.png
-framework   : io2012        # {io2012, html5slides, shower, dzslides, ...}
-highlighter : highlight.js  # {highlight.js, prettify, highlight}
-hitheme     : tomorrow   # 
-url:
-  lib: ../librariesNew
-  assets: ../assets
-widgets     : [mathjax]            # {mathjax, quiz, bootstrap}
-mode        : selfcontained # {standalone, draft}
+title: "Investigate of predict the manner by the Wearable Devices"
+author: "yjcelly"
+date: "2015-11-19"
+output: html_document
 ---
 
-
-
-```{r setoptions, cache = F, echo = F, message = F, warning = F, tidy = F}
-library(knitr)
-library(dplyr)
-library(lattice)
-# make this an external chunk that can be included in any file
-options(width = 100)
-#opts_chunk$set(message = F, error = F, warning = F, comment = NA, fig.align = 'center', dpi = 100, tidy = F)
-
-options(xtable.type = 'html')
-knit_hooks$set(inline = function(x) {
-  if(is.numeric(x)) {
-    round(x, getOption('digits'))
-  } else {
-    paste(as.character(x), collapse = ', ')
-  }
-})
-#knit_hooks$set(plot = knitr:::hook_plot_html)
+```{r setoptions,echo=TRUE}
+library(caret)
+library(kernlab); 
+#opts_chunk$set(echo=TRUE)
 ```
-
-
-## About this course
-
-* This course covers the basic ideas behind machine learning/prediction
-  * Study design - training vs. test sets
-  * Conceptual issues - out of sample error, ROC curves
-  * Practical implementation - the caret package
-* What this course depends on
-  * The Data Scientist's Toolbox
-  * R Programming
-* What would be useful
-  * Exploratory analysis
-  * Reporting Data and Reproducible Research
-  * Regression models
-
----
-
-
 
 
 ## Overview
