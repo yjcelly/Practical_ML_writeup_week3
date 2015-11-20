@@ -71,39 +71,138 @@ img {
 <pre class="r"><code>library(caret)</code></pre>
 <pre><code>## Loading required package: lattice
 ## Loading required package: ggplot2</code></pre>
-<pre class="r"><code>library(kernlab); 
-#opts_chunk$set(echo=TRUE)</code></pre>
+<pre class="r"><code>library(kernlab)
+library(nnet)
+library(RSNNS)</code></pre>
+<pre><code>## Loading required package: Rcpp
+## 
+## Attaching package: 'RSNNS'
+## 
+## The following objects are masked from 'package:caret':
+## 
+##     confusionMatrix, train</code></pre>
 <div id="overview" class="section level2">
 <h2>Overview</h2>
-<p>The project is about</p>
+<p>The project will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants and to predict the manner in which they did the exercise.</p>
 </div>
 <div id="data-description" class="section level2">
 <h2>Data Description</h2>
-<p>The data is come from the</p>
+<p>The data lable is come from the 6 participants which were asked to perform barbell lifts correctly and incorrectly in 5 different ways. The field of “classe” is the lable. The training data available here: <a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv" class="uri">https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv</a> .The test data are available here: <a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv" class="uri">https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv</a> .The test data without the lable.</p>
 </div>
 <div id="data-prepare-process" class="section level2">
 <h2>Data Prepare Process</h2>
-<p>Preprocess the data</p>
+<p>At first, we must preprocess the data, including converting the abnormal value to zero, changing the empty value to zero, modify the string of yes and no to the numeric and so on.</p>
+<pre class="r"><code>setwd(&quot;F:\\coursera\\8_Practical Machine Learning\\Writeup&quot;)
+
+###read the csv data
+traindata &lt;- read.csv(&quot;pml-training.csv&quot;,stringsAsFactors=FALSE)
+testdata &lt;- read.csv(&quot;pml-testing.csv&quot;,stringsAsFactors=FALSE)
+
+###convert the abnormal value to zero
+traindata[traindata == &quot;NA&quot;] &lt;-as.numeric(0)
+testdata[testdata == &quot;NA&quot;] &lt;- as.numeric(0)
+traindata[traindata == &quot;#DIV/0!&quot;] &lt;-as.numeric(0)
+testdata[testdata == &quot;#DIV/0!&quot;] &lt;- as.numeric(0)
+
+###change the empty value and string zero to numeric zero
+traindata[traindata == &quot;&quot;] &lt;- as.numeric(0)
+testdata[testdata == &quot;&quot;] &lt;- as.numeric(0)
+traindata[traindata == &quot;0&quot;] &lt;- as.numeric(0)
+testdata[testdata == &quot;0&quot;] &lt;- as.numeric(0)
+
+###modify the string of yes and no to numeric zero
+traindata[traindata  == &quot;yes&quot;] &lt;- as.numeric(1)
+traindata[traindata == &quot;no&quot;] &lt;- as.numeric(0)
+testdata[testdata  == &quot;yes&quot;] &lt;- as.numeric(1)
+testdata[testdata  == &quot;no&quot;] &lt;- as.numeric(0)
+
+###other abnormal value to zero
+traindata[is.na(traindata)] &lt;-as.numeric(0)
+testdata[is.na(testdata)] &lt;- as.numeric(0)</code></pre>
+<p>Besides that, we also should extract the useful fields and convert all data to numeric. An important step is to normalize the data for mean and square deviation.</p>
+<pre class="r"><code>predictColIndex=6:159
+num &lt;- sapply(traindata[, predictColIndex], as.numeric)
+cleanTrainData &lt;- data.frame(num)
+num &lt;- sapply(testdata[, predictColIndex], as.numeric)
+cleanTestData &lt;- data.frame(num)
+
+
+cleanParamColIndex=1:154
+preObj &lt;- preProcess(cleanTrainData[,cleanParamColIndex],method=c(&quot;center&quot;,&quot;scale&quot;))</code></pre>
+<pre><code>## Warning in preProcess.default(cleanTrainData[, cleanParamColIndex], method
+## = c(&quot;center&quot;, : These variables have zero variances: kurtosis_yaw_belt,
+## skewness_yaw_belt, amplitude_yaw_belt, kurtosis_yaw_dumbbell,
+## skewness_yaw_dumbbell, amplitude_yaw_dumbbell, kurtosis_yaw_forearm,
+## skewness_yaw_forearm, amplitude_yaw_forearm</code></pre>
+<pre class="r"><code>trainPreObj &lt;- predict(preObj,cleanTrainData[,cleanParamColIndex])
+testPreObj &lt;-  predict(preObj,cleanTestData [,cleanParamColIndex])</code></pre>
+<p>At last, we combine the value and label for training data. For convenience, we give the test data an virtual label.</p>
+<pre class="r"><code>clean_lab_trainData &lt;- cbind(trainPreObj ,as.factor(traindata$classe) )
+names(clean_lab_trainData) &lt;- c(names(trainPreObj),&quot;classe&quot;)
+clean_lab_trainData  &lt;- na.omit(clean_lab_trainData )
+
+clean_lab_testData &lt;- cbind(testPreObj ,as.factor( testdata$problem_id)  )
+names(clean_lab_testData ) &lt;- c(names(testPreObj ),&quot;classe&quot;)</code></pre>
 </div>
-<div id="predict-the-manner-by-machine-learning" class="section level2">
-<h2>predict the manner by machine learning</h2>
-<p>description the different method to predict</p>
+<div id="predict-the-manner-by-decision-tree" class="section level2">
+<h2>Predict the Manner by Decision Tree</h2>
+<p>At first, we use a simple machine learning method of decision tree. In the decision tree, we should random split the data into train and develop set. We set the ratio of training data is 0.85.</p>
+<pre class="r"><code>inTrain &lt;- createDataPartition(y=clean_lab_trainData$classe,p=0.85, list=FALSE)
+training_85 &lt;- clean_lab_trainData[inTrain,]
+dev_15 &lt;- clean_lab_trainData[-inTrain,]
+
+
+modFit &lt;- train(classe~.,method=&quot;rpart&quot;,data=training_85)</code></pre>
+<pre><code>## Loading required package: rpart</code></pre>
+<pre class="r"><code>train_ret &lt;- caret::confusionMatrix(training_85$classe,predict(modFit,training_85 ) )
+dev_ret &lt;- caret::confusionMatrix(dev_15$classe,predict(modFit,dev_15 ) )</code></pre>
+<p>After training, we give the result of in the training and develop set. The accuracy in the develop set is about 50% and it is not a very good predict.</p>
+<pre class="r"><code>train_ret$overall</code></pre>
+<pre><code>##       Accuracy          Kappa  AccuracyLower  AccuracyUpper   AccuracyNull 
+##   0.5241606715   0.3789267831   0.5165480265   0.5317648886   0.5100119904 
+## AccuracyPValue  McnemarPValue 
+##   0.0001318961   0.0000000000</code></pre>
+<pre class="r"><code>dev_ret$overall</code></pre>
+<pre><code>##       Accuracy          Kappa  AccuracyLower  AccuracyUpper   AccuracyNull 
+##   5.292318e-01   3.861953e-01   5.110038e-01   5.474016e-01   4.993202e-01 
+## AccuracyPValue  McnemarPValue 
+##   6.250968e-04  3.281853e-221</code></pre>
 </div>
-<div id="result" class="section level2">
-<h2>Result</h2>
-<p>Give the result of</p>
+<div id="predict-the-manner-by-multi-layer-perceptron" class="section level2">
+<h2>Predict the Manner by Multi-layer Perceptron</h2>
+<p>We also try the multi-layer perceptron for predicting the manner. With the help of RSNNS package, we use the function of mlp. In the help of mlp function, we know the useage. Firstly, we should random sort for the data and split the data to train and develop set. Secondly, we should decode the class lable. It means to convert the class to sequence of 0 and 1. At last, call the function mlp and give the params. The cross-validation style is leave one out method.</p>
+<pre class="r"><code>###random sort for all data
+clean_lab_trainDataRandom &lt;- clean_lab_trainData[sample(1:nrow(clean_lab_trainData ),length(1:nrow(clean_lab_trainData ))),1:ncol(clean_lab_trainData )]
+inputValues= clean_lab_trainDataRandom[,1:154]
+
+##decode the class lable, means convert the lable to sequence of 0 and 1.
+outputTargets = decodeClassLabels(clean_lab_trainDataRandom[,155])
+
+##split the data to train set and develop set
+train_dev = splitForTrainingAndTest(inputValues, outputTargets , ratio=0.15)
+model = mlp(train_dev$inputsTrain, train_dev$targetsTrain, size=30, learnFunc=&quot;Std_Backpropagation&quot;, learnFuncParams=c(0.1),maxit=100,hiddenActFunc = &quot;Act_Logistic&quot;, inputsTest=train_dev$inputsTest, targetsTest=train_dev$targetsTest)
+
+### predict and get the result
+predictions = predict(model,train_dev$inputsTest)
+dev_ret &lt;- RSNNS::confusionMatrix(train_dev$targetsTest,predictions) 
+test_ret &lt;- predict(model,clean_lab_testData[,1:154])</code></pre>
+<p>The result of multi-layer Perceptron is very good. The accuracy is 95%.</p>
+<pre class="r"><code>dev_ret</code></pre>
+<pre><code>##        predictions
+## targets   1   2   3   4   5
+##       1 802   8   1   2   2
+##       2  14 555   6   2   3
+##       3   6  19 471   7   3
+##       4   1   7  26 443   9
+##       5   1   1   2   2 551</code></pre>
+<pre class="r"><code>sprintf(&quot;The accuracy of develop set is %.3f&quot;,(dev_ret[1,1]+dev_ret[2,2]+dev_ret[3,3]+dev_ret[4,4]+dev_ret[5,5])/sum(dev_ret))</code></pre>
+<pre><code>## [1] &quot;The accuracy of develop set is 0.959&quot;</code></pre>
+<pre class="r"><code>max.col(test_ret)</code></pre>
+<pre><code>##  [1] 2 1 2 1 1 5 4 2 1 1 2 3 2 1 5 5 1 2 2 2</code></pre>
 </div>
 <div id="expected-out-of-sample-error" class="section level2">
 <h2>Expected out of sample error</h2>
-<p>Give the expected out of sample error</p>
-<pre class="r"><code>summary(cars)</code></pre>
-<pre><code>##      speed           dist       
-##  Min.   : 4.0   Min.   :  2.00  
-##  1st Qu.:12.0   1st Qu.: 26.00  
-##  Median :15.0   Median : 36.00  
-##  Mean   :15.4   Mean   : 42.98  
-##  3rd Qu.:19.0   3rd Qu.: 56.00  
-##  Max.   :25.0   Max.   :120.00</code></pre>
+<p>As described in the end, we choose the method of multi-layer perceptron. At the develop set, the accuracy is close 95%. So we conclude the model will have a good result in the out of sample. We guess the error of out of sample is about 5%-8% because the accuracy will decrease in the out of sample testset. It also a good predict for the manner.</p>
 </div>
 
 
