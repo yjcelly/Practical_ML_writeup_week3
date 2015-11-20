@@ -2,10 +2,14 @@
 title: "Investigate of predict the manner by the Wearable Devices"
 author: "yjcelly"
 date: "2015-11-19"
-output: html_document
+output:
+  html_document:
+    keep_md: yes
+  pdf_document: default
 ---
 
 ```{r setoptions,echo=TRUE}
+library(knitr)
 library(caret)
 library(kernlab)
 library(nnet)

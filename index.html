@@ -68,7 +68,8 @@ img {
 </div>
 
 
-<pre class="r"><code>library(caret)</code></pre>
+<pre class="r"><code>library(knitr)
+library(caret)</code></pre>
 <pre><code>## Loading required package: lattice
 ## Loading required package: ggplot2</code></pre>
 <pre class="r"><code>library(kernlab)
@@ -159,14 +160,14 @@ dev_ret &lt;- caret::confusionMatrix(dev_15$classe,predict(modFit,dev_15 ) )</co
 <p>After training, we give the result of in the training and develop set. The accuracy in the develop set is about 50% and it is not a very good predict.</p>
 <pre class="r"><code>train_ret$overall</code></pre>
 <pre><code>##       Accuracy          Kappa  AccuracyLower  AccuracyUpper   AccuracyNull 
-##   0.5241606715   0.3789267831   0.5165480265   0.5317648886   0.5100119904 
+##      0.5711631      0.4520327      0.5636106      0.5786907      0.4006595 
 ## AccuracyPValue  McnemarPValue 
-##   0.0001318961   0.0000000000</code></pre>
+##      0.0000000      0.0000000</code></pre>
 <pre class="r"><code>dev_ret$overall</code></pre>
 <pre><code>##       Accuracy          Kappa  AccuracyLower  AccuracyUpper   AccuracyNull 
-##   5.292318e-01   3.861953e-01   5.110038e-01   5.474016e-01   4.993202e-01 
+##   5.717199e-01   4.531597e-01   5.536054e-01   5.896916e-01   4.095853e-01 
 ## AccuracyPValue  McnemarPValue 
-##   6.250968e-04  3.281853e-221</code></pre>
+##   3.559286e-70  7.564251e-203</code></pre>
 </div>
 <div id="predict-the-manner-by-multi-layer-perceptron" class="section level2">
 <h2>Predict the Manner by Multi-layer Perceptron</h2>
@@ -190,15 +191,15 @@ test_ret &lt;- predict(model,clean_lab_testData[,1:154])</code></pre>
 <pre class="r"><code>dev_ret</code></pre>
 <pre><code>##        predictions
 ## targets   1   2   3   4   5
-##       1 802   8   1   2   2
-##       2  14 555   6   2   3
-##       3   6  19 471   7   3
-##       4   1   7  26 443   9
-##       5   1   1   2   2 551</code></pre>
+##       1 779   4   5   0   1
+##       2   9 540  16   6   4
+##       3   5   3 503  12   4
+##       4   4   2  19 456   3
+##       5   3   4  10   2 550</code></pre>
 <pre class="r"><code>sprintf(&quot;The accuracy of develop set is %.3f&quot;,(dev_ret[1,1]+dev_ret[2,2]+dev_ret[3,3]+dev_ret[4,4]+dev_ret[5,5])/sum(dev_ret))</code></pre>
-<pre><code>## [1] &quot;The accuracy of develop set is 0.959&quot;</code></pre>
+<pre><code>## [1] &quot;The accuracy of develop set is 0.961&quot;</code></pre>
 <pre class="r"><code>max.col(test_ret)</code></pre>
-<pre><code>##  [1] 2 1 2 1 1 5 4 2 1 1 2 3 2 1 5 5 1 2 2 2</code></pre>
+<pre><code>##  [1] 2 1 2 1 1 3 4 2 1 1 4 3 2 1 5 5 1 2 2 2</code></pre>
 </div>
 <div id="expected-out-of-sample-error" class="section level2">
 <h2>Expected out of sample error</h2>
